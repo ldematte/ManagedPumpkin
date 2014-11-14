@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Pumpkin;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PumpkinTests {
     [TestClass]
@@ -70,6 +71,21 @@ namespace PumpkinTests {
             };
 
             Assert.IsFalse(SnippetCompiler.CheckAssemblyAgainstWhitelist(snippetAssembly.Item1, whiteList));
+        }
+
+        [TestMethod]
+        public void CecilPatchCall() {
+            var snippetSource = File.ReadAllText(@"..\..\Tests\SemiPatched_HelloWorld.cs");
+            var snippetAssembly = Pumpkin.SnippetCompiler.CompileWithCSC(snippetSource);
+
+            var patchedAssembly = SnippetCompiler.PatchAssembly(snippetAssembly.Item1, "Snippets.SemiPatched_HelloWorld");
+
+            var snippetResult = SnippetRunner.Run(patchedAssembly, "Snippets.SemiPatched_HelloWorld");
+
+            Assert.IsTrue(snippetResult.Success);
+            Assert.IsNull(snippetResult.Exception);
+
+            Assert.AreEqual("Hello world!", snippetResult.Output.FirstOrDefault());
         }
     }
 }

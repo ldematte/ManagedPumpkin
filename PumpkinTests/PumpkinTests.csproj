@@ -52,6 +52,8 @@
   <ItemGroup>
     <Compile Include="CompilationTests.cs" />
     <Compile Include="ResourceLimitationTests.cs" />
+    <Compile Include="Tests\CreateObjectWithActivator.cs" />
+    <Compile Include="Tests\SemiPatched_HelloWorld.cs" />
     <Compile Include="Tests\Patched_HelloWorld.cs" />
     <Compile Include="Tests\Patched_FileRead.cs" />
     <Compile Include="Tests\FileRead.cs" />

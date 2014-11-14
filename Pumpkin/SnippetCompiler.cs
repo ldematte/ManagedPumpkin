@@ -71,42 +71,50 @@ namespace Pumpkin {
         }
 
        
-        /*
+        // A very simple demo of assembly patching. 
+        // We patch a single method :) but this is a good starting point!
         public static byte[] PatchAssembly(byte[] compiledSnippet, string className) {
+
+            var monitorModule = ModuleDefinition.ReadModule(typeof(Monitor).Assembly.Location);
 
             using (var memoryStream = new MemoryStream(compiledSnippet)) {
                 var module = ModuleDefinition.ReadModule(memoryStream);
 
                 // Retrieve the target method we want to patch
-                var targetType = module.Types.Single(t => t.Name == className);
-                var runMethod = targetType.Methods.Single(m => m.Name == "SnippetMain");
+                var targetType = module.Types.Single(t => t.FullName == className);
+                var mainMethod = targetType.Methods.Single(m => m.Name == "SnippetMain");
+
+                var monitorRef = mainMethod.Parameters.Single(p => p.ParameterType.Name.Equals("Monitor")).Sequence;
 
                 // Get a ILProcessor for the method
-                var il = runMethod.Body.GetILProcessor();
+                var il = mainMethod.Body.GetILProcessor();
                 // Retrieve instructions calling "Console.WriteLine"
-                var callsToPatch = runMethod
+                var callsToPatch = mainMethod
                     .Body
                     .Instructions
                     .Where(i =>
                         (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt)
-                        && ((MethodReference)i.Operand).DeclaringType.Name == "Console");
+                        && ((MethodReference)i.Operand).DeclaringType.Name == "Console").ToList();
 
                 // Retrieve the Console_WriteLine method
-                var myConsoleWriteline = monitorType.Methods.Single(m => m.Name == "Console_WriteLine");
+                var myConsoleWriteline = monitorModule.GetType("Pumpkin.Monitor").Methods.Single(m => m.Name == "Console_WriteLine");
 
                 // Create a new instruction to call the new method
-                var patchedCall = il.Create(OpCodes.Call, myConsoleWriteline);
+                var patchedCall = il.Create(OpCodes.Call, mainMethod.Module.Import(myConsoleWriteline));
 
                 // Replace the call
-                foreach (var callToPatch in callsToPatch) {
-                    il.Replace(callToPatch, myConsoleWriteline);
+                foreach (var callToPatch in callsToPatch) {                    
+                    il.Replace(callToPatch, patchedCall);
+                    // We know Console.WriteLine has one arg, so.. go to previous!
+                    il.InsertBefore(patchedCall.Previous, il.Create(OpCodes.Ldarg, monitorRef));                    
                 }
+
                 // Write the module
                 using (var outputAssembly = new MemoryStream()) {
                     module.Write(outputAssembly);
                     return outputAssembly.ToArray();
                 }
             }
-        }*/
+        }
     }
 }
