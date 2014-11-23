@@ -57,8 +57,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CecilExt.cs" />
     <Compile Include="ListEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Signature.cs" />
     <Compile Include="SnippetCompiler.cs" />
     <Compile Include="SnippetResult.cs" />
     <Compile Include="SnippetRunner.cs" />

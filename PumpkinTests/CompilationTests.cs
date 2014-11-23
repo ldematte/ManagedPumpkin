@@ -74,18 +74,35 @@ namespace PumpkinTests {
         }
 
         [TestMethod]
-        public void CecilPatchCall() {
-            var snippetSource = File.ReadAllText(@"..\..\Tests\SemiPatched_HelloWorld.cs");
+        public void CecilPatchStaticCall() {
+            var snippetSource = File.ReadAllText(@"..\..\Tests\HelloWorld.cs");
             var snippetAssembly = Pumpkin.SnippetCompiler.CompileWithCSC(snippetSource);
 
-            var patchedAssembly = SnippetCompiler.PatchAssembly(snippetAssembly.Item1, "Snippets.SemiPatched_HelloWorld");
+            var patchedAssembly = SnippetCompiler.PatchAssembly(snippetAssembly.Item1, "Snippets.HelloWorld");
 
-            var snippetResult = SnippetRunner.Run(patchedAssembly, "Snippets.SemiPatched_HelloWorld");
+            var snippetResult = SnippetRunner.Run(patchedAssembly, "Snippets.HelloWorld");
 
             Assert.IsTrue(snippetResult.Success);
             Assert.IsNull(snippetResult.Exception);
 
             Assert.AreEqual("Hello world!", snippetResult.Output.FirstOrDefault());
+        }
+
+        [TestMethod]
+        public void CecilPatchMethodCreation() {
+            var snippetSource = File.ReadAllText(@"..\..\Tests\ObjectCreation.cs");
+            var snippetAssembly = Pumpkin.SnippetCompiler.CompileWithCSC(snippetSource);
+
+            var patchedAssembly = SnippetCompiler.PatchAssembly(snippetAssembly.Item1, "Snippets.ObjectCreation");            
+
+            var snippetResult = SnippetRunner.Run(patchedAssembly, "Snippets.ObjectCreation");
+
+            Assert.IsTrue(snippetResult.Success);
+            Assert.IsNull(snippetResult.Exception);
+
+            Assert.AreEqual("0 - Hello", snippetResult.Output.FirstOrDefault());
+            Assert.AreEqual(10, snippetResult.Output.Count);
+            Assert.AreEqual(10, snippetResult.Monitor.NumberOfObjectCreations);
         }
     }
 }

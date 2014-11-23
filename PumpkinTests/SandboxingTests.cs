@@ -17,9 +17,9 @@ namespace Pumpkin {
             Assert.IsFalse(snippetResult.Success);
             Assert.IsNotNull(snippetResult.Exception);
 
-            Assert.AreEqual(typeof(System.Security.SecurityException), snippetResult.Exception.InnerException.GetType());
+            Assert.AreEqual(typeof(System.Security.SecurityException), snippetResult.Exception.GetType());
 
-            var se = (System.Security.SecurityException)snippetResult.Exception.InnerException;
+            var se = (System.Security.SecurityException)snippetResult.Exception;
             Assert.AreEqual(typeof(System.Security.Permissions.FileIOPermission), se.FirstPermissionThatFailed.GetType());
         }
 
@@ -34,6 +34,23 @@ namespace Pumpkin {
             Assert.IsNull(snippetResult.Exception);
 
             Assert.AreEqual("Hello world!", snippetResult.Output.FirstOrDefault());
+        }
+
+        [TestMethod]
+        public void SandboxShouldRegisterExceptions() {
+            var snippetSource = File.ReadAllText(@"..\..\Tests\ThrowException.cs");
+            var snippetAssembly = Pumpkin.SnippetCompiler.CompileWithCSC(snippetSource);
+
+            var patchedAssembly = SnippetCompiler.PatchAssembly(snippetAssembly.Item1, "Snippets.ThrowException");
+            File.WriteAllBytes(@"C:\Temp\out.dll", patchedAssembly);
+
+            var snippetResult = SnippetRunner.Run(patchedAssembly, "Snippets.ThrowException");
+
+            Assert.IsFalse(snippetResult.Success);
+            Assert.IsNotNull(snippetResult.Exception);
+
+            Assert.AreEqual(typeof(Exception), snippetResult.Exception.GetType());
+            Assert.AreEqual("TEST", snippetResult.Exception.Message);
         }
     }
 }

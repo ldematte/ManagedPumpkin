@@ -55,19 +55,24 @@ namespace Pumpkin {
             try {
                 //Now invoke the method.
                 target.Invoke(null, new object[] { monitor });
-                //Alternativaly: snippetAssembly.EntryPoint.Invoke(null, null);  
+                //Alternatively: snippetAssembly.EntryPoint.Invoke(null, null);  
 
-                return new SnippetResult(monitor.output);
+                return new SnippetResult(monitor);
             }
-            catch (Exception ex) {
+            catch (TargetInvocationException ex) {
                 // When we print informations from a SecurityException extra information can be printed if we are 
                 //calling it with a full-trust stack.
                 (new PermissionSet(PermissionState.Unrestricted)).Assert();
+                System.Diagnostics.Debug.WriteLine("Exception caught:\n{0}", ex.InnerException.ToString());
+                CodeAccessPermission.RevertAssert();
+                return new SnippetResult(ex.InnerException, monitor);
+            }
+            catch (Exception ex) {
+                (new PermissionSet(PermissionState.Unrestricted)).Assert();
                 System.Diagnostics.Debug.WriteLine("Exception caught:\n{0}", ex.ToString());
                 CodeAccessPermission.RevertAssert();
-
-                return new SnippetResult(ex);
-            }            
+                return new SnippetResult(ex, monitor);
+            }    
         }
     }
 
@@ -94,6 +99,8 @@ namespace Pumpkin {
 
                 //Now we have everything we need to create the AppDomain, so let's create it.
                 domain = AppDomain.CreateDomain(sandboxName, null, adSetup, permSet, fullTrustAssembly);
+
+                AppDomain.MonitoringIsEnabled = true;
             }
 
             return domain;

@@ -7,7 +7,7 @@ namespace Snippets {
 
         public static void SnippetMain(Pumpkin.Monitor monitor) {
             //Console.WriteLine("Hello world!");
-            monitor.Console_WriteLine("Hello world!");
+            Pumpkin.Monitor.Console_WriteLine("Hello world!", monitor);
         }
     }
 }
